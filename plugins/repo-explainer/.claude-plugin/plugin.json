@@ -1,0 +1,17 @@
+{
+  "name": "repo-explainer",
+  "version": "0.1.0",
+  "description": "Generate a self-contained local documentation website that explains one or more git repositories in business and technical terms, with an embedded AI assistant that can deep-research the cloned source and integrate findings back into the docsite or the repo's own docs.",
+  "author": {
+    "name": "Vojta Tuma",
+    "email": "vojta.tuma@keboola.com"
+  },
+  "keywords": [
+    "documentation",
+    "codebase",
+    "explain",
+    "onboarding",
+    "repository",
+    "docsite"
+  ]
+}

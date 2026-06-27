@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "repo-explainer-kit",
+  "version": "0.1.0",
+  "metadata": {
+    "description": "Generate a local documentation website explaining any git repository (or set of repositories), complete with an embedded AI assistant that can deep-research the cloned source and write the docs back."
+  },
+  "owner": {
+    "name": "Vojta Tuma",
+    "email": "vojta.tuma@keboola.com"
+  },
+  "plugins": [
+    {
+      "name": "repo-explainer",
+      "description": "Clone one or more git repos and generate a self-contained local docsite that explains them in business and technical terms, with an embedded AI assistant for deep research and living documentation.",
+      "version": "0.1.0",
+      "source": "./plugins/repo-explainer",
+      "category": "documentation"
+    }
+  ]
+}

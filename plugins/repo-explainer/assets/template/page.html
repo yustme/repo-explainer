@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>{{STYLES}}</style>
+</head>
+<body data-repo="{{REPO}}" data-page="{{PAGE}}" data-view="{{VIEW}}" data-world="{{WORLD}}" data-repo-docs="{{REPO_DOCS}}">
+<header class="topbar"><div class="container inner">
+  <a class="brand" href="index.html"><span class="dot"></span> {{BRAND}}</a>
+  <div class="topright">{{NAV}}</div>
+</div></header>
+
+<main class="container">
+<!-- REPO_EXPLAINER:CONTENT -->
+<section class="hero">
+  <p class="eyebrow">{{EYEBROW}}</p>
+  <h1>{{H1}}</h1>
+  <p class="lead">Content is being generated…</p>
+</section>
+<!-- /REPO_EXPLAINER:CONTENT -->
+</main>
+
+<button id="aiToggle">✦ AI assistant</button>
+<aside id="aiPanel" aria-label="AI assistant">
+  <div class="ah">
+    <span class="at"><span class="dot"></span> AI assistant</span>
+    <label class="dr" id="aiDeepLbl" title="Deep research: fullscreen, reads the real source for a detailed answer (+ infographics)">
+      <input type="checkbox" id="aiDeep">
+      <span class="dr-track"><span class="dr-knob"></span></span>
+      <span class="dr-lbl">Deep research</span>
+    </label>
+    <button class="x ac" id="aiClear" title="Clear conversation">↺</button>
+    <button class="x" id="aiClose" title="Close">×</button>
+  </div>
+  <div id="aiLog">
+    <p class="empty">Select any text on the page and click <b>✦ Explain</b> above the selection. The selection is sent here and the assistant explains it in the context of {{BRAND}} (using your Claude&nbsp;Code license).<br><br>The <b>Deep research</b> toggle goes fullscreen and reads the real source for a detailed answer (and can add infographics).<br><br>Needs the local bridge running: <code>python3 assistant-bridge.py &lt;workspace&gt;</code></p>
+  </div>
+  <form id="aiForm">
+    <input id="aiInput" type="text" placeholder="Ask a follow-up…" autocomplete="off">
+    <button type="submit">→</button>
+  </form>
+</aside>
+<button id="explainBtn">✦ Explain</button>
+<script>{{ASSISTANT_JS}}</script>
+</body>
+</html>
