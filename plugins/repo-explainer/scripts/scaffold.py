@@ -8,7 +8,7 @@ Claude to fill.
 
 Usage:
   python3 scaffold.py --workspace <dir> --title <str> --lang <code> \
-      --scope <business|business+technical> \
+      --scope <business|business+technical> [--visuals <none|animated>] \
       --repo <slug>=<git-url-or-local-path> [--repo <slug>=<url> ...] [--world <str>] [--brand <str>]
 
 Prints one JSON line describing the result.
@@ -97,6 +97,8 @@ def main():
     ap.add_argument("--lang", default="en")
     ap.add_argument("--scope", default="business+technical",
                     choices=["business", "business+technical"])
+    ap.add_argument("--visuals", default="none", choices=["none", "animated"],
+                    help="animated: docsite + assistant generate animated flow diagrams")
     ap.add_argument("--repo", action="append", required=True,
                     help="slug=git-url-or-local-path (repeatable)")
     ap.add_argument("--world", default="")
@@ -127,6 +129,7 @@ def main():
     world = args.world or f"the {brand} project"
     styles = (TEMPLATE_DIR / "styles.css").read_text(encoding="utf-8")
     assistant_js = (TEMPLATE_DIR / "assistant.js").read_text(encoding="utf-8")
+    toc_js = (TEMPLATE_DIR / "toc.js").read_text(encoding="utf-8")
     page_tpl = (TEMPLATE_DIR / "page.html").read_text(encoding="utf-8")
     index_tpl = (TEMPLATE_DIR / "index.html").read_text(encoding="utf-8")
 
@@ -142,6 +145,7 @@ def main():
             "TITLE": html.escape(f"{repo['name']} — {view}"),
             "STYLES": styles,
             "ASSISTANT_JS": assistant_js,
+            "TOC_JS": toc_js,
             "BRAND": html.escape(brand),
             "REPO": html.escape(repo["slug"]),
             "PAGE": html.escape(fname),
@@ -180,6 +184,7 @@ def main():
         "title": args.title,
         "lang": args.lang,
         "world": world,
+        "visuals": args.visuals,
         "models": {"concise": "claude-haiku-4-5-20251001", "deep": "sonnet"},
         "repos": repos,
         "pages": pages,
@@ -193,6 +198,7 @@ def main():
         "pages": generated,
         "scope": args.scope,
         "lang": args.lang,
+        "visuals": args.visuals,
         "has_technical": has_technical,
     }))
 

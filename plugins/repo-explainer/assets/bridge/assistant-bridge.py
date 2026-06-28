@@ -50,6 +50,7 @@ if not CONFIG_PATH.is_file():
 CONFIG = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
 LANG = CONFIG.get("lang", "en")
 WORLD = CONFIG.get("world") or "this repository"
+VISUALS = CONFIG.get("visuals", "none")
 MODELS = CONFIG.get("models") or {}
 MODEL_CONCISE = MODELS.get("concise", "claude-haiku-4-5-20251001")
 MODEL_DEEP = MODELS.get("deep", "sonnet")
@@ -152,11 +153,29 @@ def build_explain_prompt(selection, context, deep=False):
         "code block, with the file path above it.\n"
         "3) Explain in depth and structured — markdown: ### headings, bullets, **bold**, `inline code`, "
         "fenced ```code``` blocks. Length is fine.\n"
-        "4) If a visual helps, you MAY add at the very end ONE compact self-contained infographic as a "
-        "single ```html block: dark background #14181E, text #E9E3D6, accent #C99A3F, inline CSS only, "
-        "no external resources, max ~440px tall. Skip it if it doesn't genuinely help.\n\n"
-        f"Answer in {L}. Keep technical terms in English."
+        + _visual_clause()
+        + f"\nAnswer in {L}. Keep technical terms in English."
     )
+
+
+def _visual_clause():
+    """Step 4 of the deep prompt — the infographic instruction, tuned by the visuals setting.
+
+    The infographic renders in a sandboxed, script-less iframe with NO access to the page's CSS,
+    so it must be a fully self-contained ```html block (its own inline <style>, no external
+    resources, no <script>). Animation must be pure CSS keyframes or SVG SMIL."""
+    base = ("4) If a visual helps, you MAY add at the very end ONE compact self-contained infographic "
+            "as a single ```html block: its own inline <style>, dark background #14181E, text #E9E3D6, "
+            "accent #C99A3F, no external resources, no <script>, max ~440px tall. ")
+    if VISUALS == "animated":
+        return (base +
+                "PREFER an ANIMATED diagram that shows how the thing works — a flow/pipeline, request "
+                "lifecycle, or component interaction with movement (a dot/packet traveling between "
+                "stages, a flowing dashed connector, or staged reveals). Animate with CSS keyframes or "
+                "SVG SMIL only (the sandbox blocks JS). Add a `@media (prefers-reduced-motion: reduce)` "
+                "rule that freezes motion so it still reads as a still image. Skip it only if a visual "
+                "genuinely would not help.\n")
+    return base + "Skip it if it doesn't genuinely help.\n"
 
 
 def build_propose_prompt(answer, selection, context, page, instruction="", prior=""):

@@ -34,6 +34,8 @@ The hub `index.html` is auto-generated and usable as-is; you may optionally refi
 
 Write the content in the language from `config.json` `lang`.
 
+**Automatic "On this page" menu.** Each content page builds its own section menu at runtime (`toc.js`) from your `<section>` headings — a toggle button bottom-left opens a slide-in list with scroll-spy. You do not author it. To make it good: structure the body as a flat sequence of `<section class="section">` blocks each led by a meaningful `<h2>` (the menu label), keep `<section class="hero">` with the `<h1>` at the top, and give dedicated deep-dive sections a stable `id` (used as the anchor). Sections without an `id` get one slugified from their heading.
+
 ## Design components
 
 The inlined `styles.css` defines a self-contained design system on a dark ink ground (`#14181E`) with a brass accent (`#C99A3F`) and parchment text (`#E9E3D6`), using a serif display face, a system sans for body, and mono for code. Stay within these components — do not add external stylesheets, fonts, scripts, or images (the pages are self-contained and CSP-safe).
@@ -50,9 +52,52 @@ Use each component for its intended purpose:
 
 Match content to the analysis output:
 - **Business pages** — lead paragraph + sections for purpose, what it does, who it's for, value, key capabilities (`.cards`), and how to run it.
-- **Technical pages** — shape follows the depth mode: high-level = a short overview; detailed = sectioned deep-dive with `.prompt`/`.code` file references; rebuild-from-scratch = an ordered sequence of build blocks, each its own `.section`.
+- **Technical pages** — shape follows the depth mode: high-level = a short overview; detailed = sectioned deep-dive with `.prompt`/`.code` file references; rebuild-from-scratch = an ordered sequence of build blocks, each its own `.section`. The **concepts-vs-code** choice sets the density of verbatim source: `concepts` leans on prose with the occasional snippet, `code` makes `.code` / `.prompt` source blocks the backbone of each section, `both` pairs a conceptual explanation with the implementing code.
 
 Cite real file paths from the analysis. Never introduce facts the analysis did not establish.
+
+## Animated diagrams (only when `config.json` `visuals` is `animated`)
+
+When visuals are enabled, render the analysis's **flow specs** as animated diagrams placed *next to the prose that explains each flow* — not in a gallery at the end. They are styled by the inlined `styles.css` (no extra CSS needed) and are JS-free (CSS + SVG SMIL), so they work everywhere the page does. Motion is automatically frozen under `prefers-reduced-motion`, so every diagram must read correctly as a still image too. If visuals are `none`, skip this entirely.
+
+Two components are available:
+
+**`.flow` — animated pipeline (the default).** Use for linear or branching `A → B → C` flows: data pipelines, request lifecycles, build sequences. A row of `.fnode` boxes joined by `.link` connectors; each `.link` carries a `.dot` that travels along it. Wrap it in `.diagram` for the framed figure + caption. Highlight the key node with `.fnode.accent`.
+
+```html
+<figure class="diagram">
+  <span class="cap">Request lifecycle · src/server.ts</span>
+  <div class="flow">
+    <div class="fnode">Client<span class="fs">HTTP request</span></div>
+    <div class="link"><span class="dot"></span></div>
+    <div class="fnode accent">Express proxy<span class="fs">src/server.ts</span></div>
+    <div class="link"><span class="dot"></span></div>
+    <div class="fnode">Upstream API<span class="fs">authed call</span></div>
+  </div>
+</figure>
+```
+
+**SVG building blocks — for 2-D architecture / sequence diagrams** that need real layout. Author the `<svg>` inline (with a `viewBox`) and apply the classes from `styles.css`: `.node` / `.node.accent` for boxes, `.nlabel` / `.nsub` for text, `.edge` for static connectors, `.edge.live` for a flowing (animated dashed) connector, `.packet` for a dot that travels along an inline `style="offset-path:path('…')"`, `.reveal` for a staged fade-in, `.glow` to pulse a focal element.
+
+```html
+<figure class="diagram">
+  <span class="cap">Data flow · src/pipeline/</span>
+  <svg viewBox="0 0 320 90" role="img" aria-label="Extractor sends records to the transformer, which writes to storage">
+    <rect class="node" x="6" y="30" width="78" height="30" rx="6"/>
+    <text class="nlabel" x="45" y="49" text-anchor="middle">Extract</text>
+    <path class="edge live" d="M84 45 H140"/>
+    <rect class="node accent" x="140" y="30" width="78" height="30" rx="6"/>
+    <text class="nlabel" x="179" y="49" text-anchor="middle">Transform</text>
+    <path class="edge live" d="M218 45 H274"/>
+    <rect class="node" x="274" y="30" width="40" height="30" rx="6"/>
+    <circle class="packet" r="3" style="offset-path:path('M84 45 H274')"/>
+  </svg>
+</figure>
+```
+
+Keep every node, edge, and label grounded in the flow spec (and thus in real files). Put the caption (`.cap`) to work as the source citation. Prefer a few diagrams that genuinely clarify how the system works over decorating every section.
+
+The in-page assistant produces its own animated diagrams independently: its infographics render in a **sandboxed, script-less iframe with no access to this page's CSS**, so the assistant must emit a fully self-contained block with its own inline `<style>` (it cannot reuse `.flow`/`.diagram`). That path is handled by `assistant-bridge.py`; you only author the static pages here.
 
 ## config.json
 
@@ -63,6 +108,7 @@ The workspace root holds `config.json`:
   "title": "Acme — repo docs",
   "lang": "en",
   "world": "the Acme project (a short one-line description used in assistant prompts)",
+  "visuals": "animated",
   "models": {"concise": "claude-haiku-4-5-20251001", "deep": "sonnet"},
   "repos": [{"slug": "acme", "name": "Acme", "src": "src/acme", "docs_root": "src/acme"}],
   "pages": {
@@ -75,6 +121,7 @@ The workspace root holds `config.json`:
 - `repos` — each cloned repo: `slug`, display `name`, `src` (the clone path), `docs_root` (where repo-targeted doc edits land).
 - `pages` — maps each generated page file to its repo and view.
 - `lang` — the documentation content language; also the answer language for deep assistant calls.
+- `visuals` — `animated` or `none`. When `animated`, pages carry animated flow diagrams and the assistant is told it may produce them; when `none`, both stay text-only.
 - `models` — `concise` (fast, no tools) and `deep` (tool-using research).
 - `world` — a one-line description of the repo injected into assistant prompts. The scaffold writes a stub; **refine it** after analysis (Edit `config.json`) to a single accurate sentence describing what the repo is. Accurate `world` text materially improves the assistant's answers.
 
