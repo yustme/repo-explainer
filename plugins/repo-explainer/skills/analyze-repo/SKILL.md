@@ -4,9 +4,8 @@ description: >
   Methodology for analyzing a cloned repository to produce business and technical documentation at a
   chosen depth. Used by explain-repo. Use when you need to understand a codebase enough to document it
   accurately, grounded only in the actual source.
-metadata:
-  tools: "Read, Glob, Grep, Bash"
-  model: sonnet
+allowed-tools: Read, Glob, Grep, Bash
+model: sonnet
 ---
 
 # Analyze a Repository

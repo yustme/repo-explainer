@@ -4,9 +4,8 @@ description: >
   Mandatory editorial review of generated docsite pages. An independent editor agent reads each
   page, works out what it is about, scores it against a rubric, fixes clear issues in place, and
   reports the rest. Used by explain-repo as the last step before serving.
-metadata:
-  tools: "Read, Grep, Glob, Edit"
-  model: sonnet
+allowed-tools: Read, Grep, Glob, Edit
+model: sonnet
 ---
 
 # Review the Docs (editorial pass)

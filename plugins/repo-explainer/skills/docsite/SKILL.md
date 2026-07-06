@@ -4,9 +4,8 @@ description: >
   Conventions for filling the generated docsite pages and operating the local server/bridge.
   Used by explain-repo. Use when writing documentation content into scaffolded pages, choosing
   design components, refining config.json, or starting/stopping the local docsite server.
-metadata:
-  tools: "Read, Write, Edit, Bash"
-  model: sonnet
+allowed-tools: Read, Write, Edit, Bash
+model: sonnet
 ---
 
 # Fill and Operate the Docsite
@@ -136,6 +135,8 @@ python3 "$PLUGIN_PATH/assets/bridge/assistant-bridge.py" <workspace>
 It prints exactly one line: `RUNNING http://localhost:<PORT>/index.html`. Capture that, then open it (`open <url>` on macOS, `xdg-open <url>` on Linux). Keep the process in the background so the site stays up.
 
 To stop the server, kill the background process / task. Logs are written to `<workspace>/logs/assistant.jsonl`.
+
+To verify the served UI actually works (navigation, TOC, assistant panel, deep/fullscreen layering, podcast player), run the `test-docsite` skill against the workspace.
 
 ## The assistant feedback loop
 

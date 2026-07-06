@@ -13,10 +13,11 @@ Invoke the `explain-repo` skill and pass it `$ARGUMENTS` as the repo URL(s). If 
 The `explain-repo` skill orchestrates the whole flow:
 
 1. Clone the repo(s) into a workspace under `~/repo-explains/<slug>/`.
-2. Ask you a few questions — documentation language, scope (business, or business + technical), and (for technical) the depth: high-level overview, detailed technical, or rebuild-from-scratch guide.
+2. Ask you a few questions — documentation language, scope (business, or business + technical), the depth (for technical), animated diagrams, and whether to also produce a two-host audio **podcast** of the whole topic (and in which language — defaulting to your system language).
 3. Scaffold a self-contained docsite (one page per repo and view, plus a hub page).
 4. Analyze the cloned source and write the documentation content into the pages.
 5. Run a mandatory editorial review (an independent editor agent) that checks readability, coherence, and that the text and diagrams make sense — fixing clear issues and flagging the rest.
-6. Start a local server and open the docsite in your browser.
+6. If you asked for a podcast, compose a two-host script, embed an audio player in the docsite, and synthesize the episode locally in the background.
+7. Start a local server and open the docsite in your browser.
 
-The heavy lifting lives in the skills: `explain-repo` (orchestration), `analyze-repo` (how to read and understand the source), `docsite` (how to fill the pages and run the server), and `review-docs` (the mandatory editorial pass). Start by invoking `explain-repo`.
+The heavy lifting lives in the skills: `explain-repo` (orchestration), `analyze-repo` (how to read and understand the source), `docsite` (how to fill the pages and run the server), `review-docs` (the mandatory editorial pass), and `podcast` (the optional two-host audio episode). Start by invoking `explain-repo`.

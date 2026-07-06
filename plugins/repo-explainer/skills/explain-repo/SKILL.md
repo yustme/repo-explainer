@@ -4,9 +4,8 @@ description: >
   Generate a local documentation website explaining one or more git repositories, with an embedded
   AI assistant. Use when the user wants to understand or explain a repo or set of repos — "explain
   this repo", "document this codebase", "help me onboard to X", or passes one or more git URLs.
-metadata:
-  tools: "Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Task"
-  model: sonnet
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Task
+model: sonnet
 ---
 
 # Explain a Repository
@@ -61,7 +60,17 @@ Ask these, in order. Skip the depth question entirely if scope is business-only.
    - **No** — text-and-cards documentation only.
    - Store the result as `animated` or `none` for `--visuals`. The analysis decides *which* flows merit a diagram; this toggle only turns the capability on or off.
 
-6. **Anything specific to dig into?** — finally, ask the user one open, free-text question (not fixed choices): *"Is there anything specific you'd like explained in more depth that we haven't already covered?"* Phrase it in the chosen documentation language. This catches a concrete interest the earlier questions didn't surface (a particular subsystem, concept, integration, or "how does X actually work").
+6. **Podcast** — a simple yes/no: *"Do you also want a two-host audio podcast that explains the whole topic as a story you can listen to?"* Ask regardless of scope. Default **No**.
+   - **Yes** — after the docs are written, produce a ~20–30 min two-host episode (script + open-source voice synthesis), embedded as a player in the docsite. See the `podcast` skill.
+   - **No** — skip podcast generation entirely.
+   - Store the result as `podcast` or `none`.
+
+7. **Podcast language** — only if podcast = yes. This is **independent of the documentation language** (you might read the docs in English but prefer the podcast in your own language).
+   - **Default to the system locale** detected from the environment (`$LANG` / `$LC_ALL`, e.g. `cs_CZ` -> Czech `cs`) — offer it as the first, pre-selected option.
+   - Also offer **English** (`en`) and **Other**.
+   - Store the resulting code for the podcast (e.g. `cs`, `en`). It selects both the script language and the TTS voice/phonetic-respelling rules in the `podcast` skill.
+
+8. **Anything specific to dig into?** — finally, ask the user one open, free-text question (not fixed choices): *"Is there anything specific you'd like explained in more depth that we haven't already covered?"* Phrase it in the chosen documentation language. This catches a concrete interest the earlier questions didn't surface (a particular subsystem, concept, integration, or "how does X actually work").
    - If the user names something, treat it as a **must-cover focus**: carry it into topic discovery (Step 5) as a pre-selected topic and into the analysis (Step 6) as a required deep-dive, even if it wasn't among the auto-discovered topics.
    - If the user says "no" / leaves it empty, proceed normally.
 
@@ -90,9 +99,9 @@ If `git clone` fails (private repo, missing auth, bad URL), tell the user to che
 
 ## Step 5: Discover topics and let the user pick which to deep-dive
 
-Before the full analysis, do a quick discovery pass over the clone and surface **the topics the repo deals with**, so the user can interactively choose which ones to elaborate in depth (e.g. for a Keboola repo, "what is a semantic layer" is a topic the user may want explained thoroughly). See the `analyze-repo` skill's **Topic discovery** section for how to extract them.
+Before the full analysis, do a quick discovery pass over the clone and surface **the topics the repo deals with**, so the user can interactively choose which ones to elaborate in depth (e.g. for a data-platform repo, "what is a semantic layer" is a topic the user may want explained thoroughly). See the `analyze-repo` skill's **Topic discovery** section for how to extract them.
 
-- Extract both **domain/conceptual** topics (e.g. "semantic layer", "Keboola Metastore", "AI-assisted classification") and **technical** topics (e.g. "Express proxy auth with the master token", "relationship graph layout"). Each topic = a short label + a one-line description, grounded in the repo.
+- Extract both **domain/conceptual** topics (e.g. "semantic layer", "metadata catalog", "AI-assisted classification") and **technical** topics (e.g. "Express proxy auth with the master token", "relationship graph layout"). Each topic = a short label + a one-line description, grounded in the repo.
 - Present them for selection with **multiSelect `AskUserQuestion`**. Because each question allows at most 4 options, group the topics into 1–4 thematic groups (≤4 per group, ≤16 total) — e.g. headers "Domain", "Technical", "Integration". Prioritize the most central topics; if there are more than ~16, keep the most important and tell the user the rest can still be asked later via the in-page assistant (do not hide the cap).
 - The user's selected topics become **dedicated, deeper sections** in the docs (Step 7). Unselected topics still get brief coverage in the normal flow. If the user selects nothing, proceed with standard depth and no dedicated topic sections.
 - If the user named a specific interest in Step 3's open question (question 6), **pre-select it** here (add it as an already-checked topic, creating one for it if discovery missed it) so it is guaranteed a dedicated deep-dive.
@@ -119,7 +128,15 @@ It reads each page, works out what it is about, scores it against the editorial 
 
 Relay the editor's report to the user as part of the hand-off: what it fixed and anything it flagged. For multiple repos, review every generated page.
 
-## Step 9: Start the server and open it
+## Step 9: Generate the podcast (optional)
+
+Only if the user opted into a podcast in Step 3 (question 6). Delegate to the **`podcast`** skill, passing it: the **analysis notes** from Step 6, the chosen **podcast language** (Step 3 question 7), the **workspace path**, and the **generated page files**.
+
+The `podcast` skill (a) composes a two-host script using its composition framework, in the podcast language; (b) embeds an audio player into the docsite pages (and seeds `podcast-progress.json` so the player shows progress); then (c) **synthesizes the audio in the background** with an open-source TTS engine. Because synthesis is slow (tens of minutes for a full episode on CPU), kick it off as a background job and let it run while the site is served — the embedded player polls `podcast-progress.json` and swaps in the finished audio when done. Do this step before Step 10 so the player is already on the page when the user opens the site.
+
+If the user did not opt in, skip this step.
+
+## Step 10: Start the server and open it
 
 Start the bridge in the background — it serves the workspace, picks a free port, and exposes the assistant API:
 
@@ -135,13 +152,14 @@ open "http://localhost:<PORT>/index.html"   # macOS; use xdg-open on Linux
 
 Run the bridge in the background so it keeps serving while the session continues. To stop it later, kill the background process / task.
 
-## Step 10: Hand off to the user
+## Step 11: Hand off to the user
 
 Tell the user:
 - the URL the docsite is running on,
 - a short summary of the editorial review (Step 8): what was fixed and anything flagged for their attention,
 - which topics got a dedicated deep-dive section (and that any other topic can still be explored via the assistant),
 - if visuals are `animated`, that the docs include animated flow diagrams and the assistant can produce more on demand,
+- if a podcast was requested (Step 9), that it is generating in the background and the player on the pages shows live progress and will swap in the finished episode automatically,
 - that they can select any text and click **Explain** for a concise answer, or toggle **Deep research** to have the assistant read the actual clone (`Read`/`Grep`/`Glob` over `<workspace>/src/<slug>`),
 - that under any answer they can **Integrate** the finding — proposing a styled block they can refine and approve, written into either this docsite or the source repo's own docs (README / docs/), always with a timestamped backup.
 
