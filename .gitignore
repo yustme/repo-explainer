@@ -13,3 +13,6 @@ __pycache__/
 repo-explains/
 *-podcast.mp3
 .venv/
+
+# Packaged skill artifact
+*.skill
