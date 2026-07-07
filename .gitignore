@@ -1,3 +1,15 @@
+.DS_Store
+*.log
+
+# Python
 __pycache__/
 *.pyc
-.DS_Store
+.pytest_cache/
+
+# Local Claude Code state
+.claude/
+
+# Generated docsites and local input — never part of the plugin
+repo-explains/
+*-podcast.mp3
+.venv/

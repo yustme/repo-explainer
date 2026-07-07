@@ -1,0 +1,16 @@
+# Dependencies for the maintainer scripts and the OPTIONAL podcast synthesis.
+# The core plugin (docsite scaffolding + local server) needs NO third-party
+# packages — it runs on the Python standard library only.
+
+# Tests for scripts/ (scripts/test_*.py)
+pytest
+
+# Optional — podcast audio synthesis (scripts/podcast_tts.py, Coqui XTTS-v2 engine).
+# Heavy (~2 GB) and not needed unless a user opts into a podcast. Install into an
+# isolated venv; see the `podcast` skill for the exact setup and known pins.
+# Requires ffmpeg on PATH and COQUI_TOS_AGREED=1 to accept the model license.
+coqui-tts
+transformers>=4.57,<5
+torch
+torchaudio
+torchcodec
